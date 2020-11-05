@@ -31,36 +31,36 @@
     - **CODE** a numeric code specific to the error in question
 
 - [ ] **5. Thy log shalt be written in English**
-- English is an internationally recognized language.
-- English is a better suited technical language.
-- English can be written in ASCII characters (stays the same over UTF-8, Unicode, etc).
+  - English is an internationally recognized language.
+  - English is a better suited technical language.
+  - English can be written in ASCII characters (stays the same over UTF-8, Unicode, etc).
 
 - [ ] **6. Thou shalt log with context**
-- Treat logging as if there is no access to the program source-code.
-- Log messages without context are just noise.
-- Ensure that at least the local scope of variables are included in the log context.
+  - Treat logging as if there is no access to the program source-code.
+  - Log messages without context are just noise.
+  - Ensure that at least the local scope of variables are included in the log context.
 
 - [ ] **7. Thou shalt log in machine parsable format**
-- Text logs are good for humans but very poor for machines.
-- Use a simple international standard format, like JSON.
-- Simplifies automation processing for alerting/auditing.
-- Log parsers require less processing of messages.
-- Log search engine indexing becomes straightforward.
+  - Text logs are good for humans but very poor for machines.
+  - Use a simple international standard format, like JSON.
+  - Simplifies automation processing for alerting/auditing.
+  - Log parsers require less processing of messages.
+  - Log search engine indexing becomes straightforward.
 
 - [ ] **8. Thou shalt not log too much or too little**
-- Too much logging generates too much clutter (time consuming to browse).
-- Too little logging leads to troubleshooting problems (not enough context).
-- Log more than enough in dev, then tighten it up before shipping to prod.
+  - Too much logging generates too much clutter (time consuming to browse).
+  - Too little logging leads to troubleshooting problems (not enough context).
+  - Log more than enough in dev, then tighten it up before shipping to prod.
 
 - [ ] **9. Thou shalt think to the reader**
-- The whole purpose of logging is so that someone will read it one day.
-- Readers deserve consistency, so stick to standards like RFC3339 (datetime).
-- Log parsers are readers too, so ensure consistency of log format/dictionary.
+  - The whole purpose of logging is so that someone will read it one day.
+  - Readers deserve consistency, so stick to standards like RFC3339 (datetime).
+  - Log parsers are readers too, so ensure consistency of log format/dictionary.
 
 - [ ] **10. Thou shalt not log only for troubleshooting**
-- **Auditing** management/legal events, describe what users of the system are doing.
-- **Profiling** logs are time stamped this allows us to infer performance metrics.
-- **Statistics** compute user behaviours, e.g. alert when too many errors detected in a row.
+  - **Auditing** management/legal events, describe what users of the system are doing.
+  - **Profiling** logs are time stamped this allows us to infer performance metrics.
+  - **Statistics** compute user behaviours, e.g. alert when too many errors detected in a row.
 
 ## References
 * http://www.masterzen.fr/2013/01/13/the-10-commandments-of-logging/
