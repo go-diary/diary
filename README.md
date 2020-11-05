@@ -2,33 +2,33 @@
 
 **Note:** This project is still in development, has not even started pre-alpha yet.
 
-## Logging Checklist
+## Logging Checklist [pdf]()
 ### 10 Commandments of Logging “Masterzen”
 
 - [ ] **1. Thou shalt not write log by yourself**
-- Make use of syslog or similar systems as they handle auto-ration and more.
+  - Make use of syslog or similar systems as they handle auto-ration and more.
 
 - [ ] **2. Thou shalt log at the proper level**
-- **TRACE** track bugs or code routines (dev only, not to be committed to VCS).
-- **DEBUG** activated during troubleshooting for debugging.
-- **INFO** user-driven or system specific actions.
-- **NOTICE** notable events that are not errors (default level for prod), always add context.
-- **WARN** events that could result in error, e.g low disk space, always add context.
-- **ERROR** for all errors, always add context.
-- **FATAL** signifies the end of a program (exit program), always add context. 
+  - **TRACE** track bugs or code routines (dev only, not to be committed to VCS).
+  - **DEBUG** activated during troubleshooting for debugging.
+  - **INFO** user-driven or system specific actions.
+  - **NOTICE** notable events that are not errors (default level for prod), always add context.
+  - **WARN** events that could result in error, e.g low disk space, always add context.
+  - **ERROR** for all errors, always add context.
+  - **FATAL** signifies the end of a program (exit program), always add context. 
 
 - [ ] **3. Honor thy log category**
-- The category allows classification of the log message. E.g. my.service.api.<apitoken>
-- Log categories are hierarchical to allow inherited behaviours, rules and filters.
+  - The category allows classification of the log message. E.g. my.service.api.<apitoken>
+  - Log categories are hierarchical to allow inherited behaviours, rules and filters.
 
 - [ ] **4. Thou shalt write meaningful logs**
-- Treat logging as if there is no access to the program source-code.
-- Log should not depend on previous log for context as it may not be there (async).
-- Log message prefix APP-S-SUB-CODE
-- APP your application name on 3 letters
-- S severity on 1 letter (e.g. D: debug, I: info, …)
-- SUB the sub part of the application this code pertains to
-- CODE a numeric code specific to the error in question
+  - Treat logging as if there is no access to the program source-code.
+  - Log should not depend on previous log for context as it may not be there (async).
+  - Log message prefix APP-S-SUB-CODE
+    - **APP** your application name on 3 letters
+    - **S** severity on 1 letter (e.g. D: debug, I: info, …)
+    - **SUB** the sub part of the application this code pertains to
+    - **CODE** a numeric code specific to the error in question
 
 - [ ] **5. Thy log shalt be written in English**
 - English is an internationally recognized language.
