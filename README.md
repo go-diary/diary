@@ -9,7 +9,7 @@
   - Make use of syslog or similar systems as they handle auto-ration and more.
 
 - [ ] **2. Thou shalt log at the proper level**
-  - **TRACE** track bugs or code routines (dev only, not to be committed to VCS).
+  - **TRACE** track code routines
   - **DEBUG** activated during troubleshooting for debugging.
   - **INFO** user-driven or system specific actions.
   - **NOTICE** notable events that are not errors (default level for prod), always add context.
