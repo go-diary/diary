@@ -24,11 +24,6 @@
 - [ ] **4. Thou shalt write meaningful logs**
   - Treat logging as if there is no access to the program source-code.
   - Log should not depend on previous log for context as it may not be there (async).
-  - Log message prefix APP-S-SUB-CODE
-    - **APP** your application name on 3 letters
-    - **S** severity on 1 letter (e.g. D: debug, I: info, …)
-    - **SUB** the sub part of the application this code pertains to
-    - **CODE** a numeric code specific to the error in question
 
 - [ ] **5. Thy log shalt be written in English**
   - English is an internationally recognized language.
