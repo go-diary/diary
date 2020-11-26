@@ -48,7 +48,7 @@ func (p page) Debug(key string, value interface{}) {
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
 		Level: TextLevelDebug,
-		Category: p.Category,
+		Category: fmt.Sprintf("%s.%s", p.Category, key),
 		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: "",

@@ -57,5 +57,75 @@
   - **Profiling** logs are time stamped this allows us to infer performance metrics.
   - **Statistics** compute user behaviours, e.g. alert when too many errors detected in a row.
 
-## References
+### References
 * http://www.masterzen.fr/2013/01/13/the-10-commandments-of-logging/
+
+## Basic Usage
+
+### Installation
+```
+go get github.com/go-diary/diary
+```
+
+### Create page
+```
+package main
+
+import (
+    "github.com/go-diary/diary"
+)
+
+func main() {
+    instance := diary.Dear("client", "project", "service", diary.M{}, "repository", "hash", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
+    instance.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.Page) {
+        x := 100
+        p.Debug("x", x)
+    })
+}
+```
+
+### Load Page
+```
+package main
+
+import (
+	"diary"
+	"sync"
+)
+
+var channel = make(chan []byte)
+var instance diary.Diary
+
+func main() {
+	group := sync.WaitGroup{}
+	go func() {
+		group.Add(1)
+		defer group.Done()
+
+		routine()
+	}()
+
+	instance = diary.Dear("client", "project", "service", diary.M{}, "repository", "hash", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
+	instance.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.Page) {
+		x := 100
+		p.Debug("x", x)
+		channel <- p.ToJSON()
+	})
+
+	group.Wait()
+}
+
+func routine() {
+	select {
+		case data := <-channel:
+			instance.Load(data, "routine", func(p diary.Page) {
+				y := 200
+				p.Debug("y", y)
+			})
+			break
+	}
+}
+```
+
+### License
+This project is licensed under the MIT license. See the [LICENSE](https://github.com/go-diary/diary/blob/main/LICENSE) file for more info.
