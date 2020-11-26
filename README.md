@@ -2,6 +2,82 @@
 
 **Note:** This project is still in development, has not even started pre-alpha yet.
 
+## Getting Started
+
+### Pseudo Code
+
+```
+{
+    "_id": "...",
+    "service": {
+        "client": "uprate",
+        "project": "go-diary",
+        "service": "diary",
+        "host": "",
+        "hostIps": ["12309123"],
+        "pid": 0,
+        "ppid": 0,
+        "meta": {}
+    },
+    "commit": {
+        "repository": "git@github.com:go-diary/diary.git",
+        "hash": "3a473f9",
+        "tags": [],
+        "meta": {}
+    },
+    "page": {
+        "id": "...",
+        "meta": {}
+        "auth": {
+            "type": "user",
+            "identifier": "xyz",
+            "meta": {}
+        },
+    },
+    "log": {
+        "level": "trace",
+        "category": "main.sub1.sub2.sub3",
+        "line": "{{file}}:{{line}}",
+        "stack": "",
+        "message": "",
+        "meta": {}
+    },
+    "time": "2020-11-25T00:00:00+02:00"
+}
+```
+
+```
+diary.Dear(project, service string, code Code, context Context) Dairy
+func (d Diary) Page(section string, p Page)
+func (p Page) Debug(key string, value interface{})
+```
+
+```
+package main
+
+var d diary.Diary 
+
+func init() {
+    // setup the diary framework
+    d = diary.Dear("go-diary", "diary", Code{
+        Version: "",
+        Repository: "",
+        CommitHash: "",
+    }, nil)
+
+    d.Page("init", func(p diary.Page) {
+        
+    })
+}
+
+func main() {
+    d.Page("main", func(p diary.Page) {
+        x := 100
+        p.Debug("x", x)
+    })
+}
+```
+
 ## Logging Checklist [ [pdf](https://github.com/go-diary/diary/raw/main/Logging%20Checklist.pdf) ]
 ### 10 Commandments of Logging “Masterzen”
 
