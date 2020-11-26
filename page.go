@@ -10,12 +10,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"runtime/debug"
+	"time"
 )
 
 // A private function used to parse a page instance from its JSON definition
-var parsePage = func(data []byte) (Page, error) {
-	return nil, nil
+var parsePage = func(data []byte, d diary) (page, error) {
+	var p page
+	if err := json.Unmarshal(data, &p); err != nil {
+		return page{}, err
+	}
+	p.Diary = d
+	return p, nil
 }
 
 // An definition of the public functions for a page instance
@@ -26,136 +33,175 @@ type Page interface{
 	Warning(category, message string, meta M)
 	Error(category, message string, meta M)
 	Fatal(category, message string, code int, meta M)
+	ToJSON() []byte
 }
 
 // normally only used for troubleshooting
 func (p page) Debug(key string, value interface{}) {
-	data, err := json.Marshal(Log{
+	if p.Level > LevelDebug {
+		return
+	}
+
+	_, file, line, _ := runtime.Caller(1)
+	log := Log{
 		Service: p.Diary.Service,
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
-		Level: levelToText(p.Level),
+		Level: TextLevelDebug,
 		Category: p.Category,
-		Line: "",
+		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: "",
 		Meta: M{
 			key: value,
 		},
-	})
-	if err != nil {
-		panic(err)
+		Time: time.Now(),
 	}
-	fmt.Println(string(data))
+	if p.Diary.Handler != nil {
+		p.Diary.Handler(log)
+	} else {
+		DefaultHandler(log)
+	}
 }
 
 // normally inside of a loop
 func (p page) Info(category string, meta M) {
+	if p.Level > LevelInfo {
+		return
+	}
+
+	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
 	}
-	data, err := json.Marshal(Log{
+	log := Log{
 		Service: p.Diary.Service,
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
-		Level: levelToText(p.Level),
+		Level: TextLevelInfo,
 		Category: fmt.Sprintf("%s.%s", p.Category, category),
-		Line: "",
+		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: "",
 		Meta: meta,
-	})
-	if err != nil {
-		panic(err)
+		Time: time.Now(),
 	}
-	fmt.Println(string(data))
+	if p.Diary.Handler != nil {
+		p.Diary.Handler(log)
+	} else {
+		DefaultHandler(log)
+	}
 }
 
 // normally outside of a loop
 func (p page) Notice(category string, meta M) {
+	if p.Level > LevelNotice {
+		return
+	}
+
+	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
 	}
-	data, err := json.Marshal(Log{
+	log := Log{
 		Service: p.Diary.Service,
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
-		Level: levelToText(p.Level),
+		Level: TextLevelNotice,
 		Category: fmt.Sprintf("%s.%s", p.Category, category),
-		Line: "",
+		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: "",
 		Meta: meta,
-	})
-	if err != nil {
-		panic(err)
+		Time: time.Now(),
 	}
-	fmt.Println(string(data))
+	if p.Diary.Handler != nil {
+		p.Diary.Handler(log)
+	} else {
+		DefaultHandler(log)
+	}
 }
 
 // - category: (may be empty)
 func (p page) Warning(category, message string, meta M) {
+	if p.Level > LevelWarning {
+		return
+	}
+
+	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
 	}
-	data, err := json.Marshal(Log{
+	log := Log{
 		Service: p.Diary.Service,
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
-		Level: levelToText(p.Level),
+		Level: TextLevelWarning,
 		Category: fmt.Sprintf("%s.%s", p.Category, category),
-		Line: "",
+		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: message,
 		Meta: meta,
-	})
-	if err != nil {
-		panic(err)
+		Time: time.Now(),
 	}
-	fmt.Println(string(data))
+	if p.Diary.Handler != nil {
+		p.Diary.Handler(log)
+	} else {
+		DefaultHandler(log)
+	}
 }
 
 func (p page) Error(category, message string, meta M) {
+	if p.Level > LevelError {
+		return
+	}
+
+	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
 	}
-	data, err := json.Marshal(Log{
+	log := Log{
 		Service: p.Diary.Service,
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
-		Level: levelToText(p.Level),
+		Level: TextLevelError,
 		Category: fmt.Sprintf("%s.%s", p.Category, category),
-		Line: "",
+		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: string(debug.Stack()),
 		Message: message,
 		Meta: meta,
-	})
-	if err != nil {
-		panic(err)
+		Time: time.Now(),
 	}
-	fmt.Println(string(data))
+	if p.Diary.Handler != nil {
+		p.Diary.Handler(log)
+	} else {
+		DefaultHandler(log)
+	}
 }
 
 // application will be force to exit
 func (p page) Fatal(category, message string, code int, meta M) {
+	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
 	}
-	data, err := json.Marshal(Log{
+	log := Log{
 		Service: p.Diary.Service,
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
-		Level: levelToText(p.Level),
+		Level: TextLevelFatal,
 		Category: fmt.Sprintf("%s.%s", p.Category, category),
-		Line: "",
+		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: string(debug.Stack()),
 		Message: message,
 		Meta: meta,
-	})
-	if err != nil {
-		panic(err)
+		Time: time.Now(),
 	}
-	fmt.Println(string(data))
+	if p.Diary.Handler != nil {
+		p.Diary.Handler(log)
+	} else {
+		DefaultHandler(log)
+	}
 	os.Exit(code)
 }
 
@@ -164,5 +210,25 @@ func (p page) Scope(category string, scope func(p Page)) error {
 }
 
 func (p page) ToJSON() []byte {
-	return nil
+	data, err := json.Marshal(struct {
+		Service Service `json:"service"`
+		Commit Commit `json:"commit"`
+		Chain Chain `json:"chain"`
+		Category string `json:"category"`
+		Sample int `json:"sample"`
+		Level int `json:"level"`
+		Catch bool `json:"catch"`
+	}{
+		Service: p.Diary.Service,
+		Commit: p.Diary.Commit,
+		Chain: p.Chain,
+		Category: p.Category,
+		Sample: p.Sample,
+		Level: p.Level,
+		Catch: p.Catch,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return data
 }

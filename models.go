@@ -6,6 +6,8 @@
 
 package diary
 
+import "time"
+
 // A package shorthand for a map[string]interface
 type M map[string]interface{}
 
@@ -54,11 +56,13 @@ type Log struct {
 	Stack string `json:"stack"`
 	Message string `json:"message"`
 	Meta M `json:"meta"`
+	Time time.Time `json:"time"`
 }
 
 // A private struct to encapsulate diary instance logic
 type diary struct {
 	Level int
+	Handler func(log Log)
 	Service Service
 	Commit Commit
 }

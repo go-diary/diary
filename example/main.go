@@ -1,18 +1,38 @@
 package main
 
-import "diary"
+import (
+	"diary"
+	"sync"
+)
+
+var d diary.Diary
+
+func init() {
+	d = diary.Dear("client", "project", "service", diary.M{"type":"service"}, "repository", "hash", []string{}, diary.M{"type":"commit"}, diary.LevelTrace, diary.HumanReadableHandler)
+}
 
 func main() {
-	d := diary.Dear("client", "project", "service", diary.M{"type":"service"}, "repository", "hash", []string{}, diary.M{"type":"commit"}, diary.LevelTrace)
-	if err := d.Page(-1, 1, false, "main", diary.M{}, "", "", nil, func(p diary.Page) {
-		x := 100
-		p.Debug("x", x)
-		p.Info("info", nil)
-		p.Notice("notice", nil)
-		p.Warning("warning", "this is a warning", nil)
-		p.Error("error", "this is an error", nil)
-		p.Fatal("fatal", "this is a fatal error", 1, nil)
-	}); err != nil {
-		panic(err)
-	}
+	group := sync.WaitGroup{}
+	channel := make(chan []byte)
+
+	go func() {
+		group.Add(1)
+		defer group.Done()
+
+		select {
+		case data := <-channel:
+			d.Load(data, "channel", func(p diary.Page) {
+				p.Debug("x", true)
+			})
+			break
+		}
+	}()
+
+	d.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.Page) {
+		p.Debug("x", true)
+		channel <- p.ToJSON()
+		panic("test")
+	})
+
+	group.Wait()
 }

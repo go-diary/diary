@@ -7,10 +7,18 @@
 package diary
 
 import (
+	"fmt"
+	"math/rand"
 	"net"
 	"os"
+	"runtime"
+	"runtime/debug"
 	"strings"
+	"time"
 )
+
+var counter int = 0
+var flux int = 0
 
 // An definition of the public functions for a diary instance
 type Diary interface{
@@ -25,10 +33,26 @@ type Diary interface{
 	// - authType: The shorthand code for the type of auth account (may be empty)
 	// - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 	// - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-	Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) error
+	Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page))
 
-	// Load a page using it JSON definition to chain multiple logs together when crossing micro-service boundaries
-	Load(data []byte, category string, scope func(p Page)) error
+	// Page returns a diary.Page interface instance for consumption
+	// In a page scope all logs will be linked to the same page identifier
+	// This allows us to trace the entire page chain easily for troubleshooting and profiling
+	//
+	// - level: The default level to log at [NOTE: If -1 will inherit from diary instance]
+	// - sample: A per second count indicating how frequently traces should be sampled, only applicable if level is higher than DEBUG [NOTE: if value is less than zero then will sample all traces]
+	// - catch: A flag indicating if the scope should automatically catch and return errors. [NOTE: If set to true panics will be caught and returned as an error.]
+	// - category: The shorthand code used to identify the given workflow category [NOTE: Categories will be concatenated by dot-nation: "main.sub1.sub2.sub3".]
+	// - authType: The shorthand code for the type of auth account (may be empty)
+	// - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
+	// - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
+	PageX(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) error
+
+	// Load a page using the JSON definition to chain multiple logs together when crossing micro-service boundaries
+	Load(data []byte, category string, scope func(p Page))
+
+	// Load a page using the JSON definition to chain multiple logs together when crossing micro-service boundaries
+	LoadX(data []byte, category string, scope func(p Page)) error
 }
 
 // Dear returns a diary.Diary interface instance for consumption
@@ -44,7 +68,8 @@ type Diary interface{
 // - commitMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 //
 // - level: The default level to log at [NOTE: Normally NOTICE for production services]
-func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int) Diary {
+// - handler: A routine to handle log entries  [NOTE: ]
+func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int, handler func(log Log)) Diary {
 	if level < LevelTrace || level > LevelFatal {
 		panic("level must be a value between 0 - 6")
 	}
@@ -75,11 +100,9 @@ func Dear(client, project, service string, serviceMeta M, repository, commitHash
 		}
 	}
 
-	// todo: add a handler to push to agent, api, queue, systemctl, etc. (do something with log instead of just outputting it to console)
-	// todo: add flag to disable human readable output to console (in case we want to send service console output directly to systemctl logs for legacy systems)
-
 	return &diary{
 		Level: level,
+		Handler: handler,
 		Service: Service{
 			Client: client,
 			Project: project,
@@ -101,6 +124,23 @@ func Dear(client, project, service string, serviceMeta M, repository, commitHash
 	}
 }
 
+// Page issues a diary.Page interface instance for consumption
+// In a page scope all logs will be linked to the same page identifier
+// This allows us to trace the entire page chain easily for troubleshooting and profiling
+//
+// - level: The default level to log at [NOTE: If -1 will inherit from diary instance]
+// - sample: A per second count indicating how frequently traces should be sampled, only applicable if level is higher than DEBUG [NOTE: if value is less than zero then will sample all traces]
+// - catch: A flag indicating if the scope should automatically catch and return errors. [NOTE: If set to true panics will be caught and returned as an error.]
+// - category: The shorthand code used to identify the given workflow category [NOTE: Categories will be concatenated by dot-nation: "main.sub1.sub2.sub3".]
+// - authType: The shorthand code for the type of auth account (may be empty)
+// - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
+// - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
+func (d diary) Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) {
+	if err := d.PageX(level, sample, catch, category, pageMeta, authType, authIdentifier, authMeta, scope); err != nil && !catch {
+		panic(err)
+	}
+}
+
 // Page returns a diary.Page interface instance for consumption
 // In a page scope all logs will be linked to the same page identifier
 // This allows us to trace the entire page chain easily for troubleshooting and profiling
@@ -112,7 +152,7 @@ func Dear(client, project, service string, serviceMeta M, repository, commitHash
 // - authType: The shorthand code for the type of auth account (may be empty)
 // - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 // - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-func (d diary) Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) (response error) {
+func (d diary) PageX(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) (response error) {
 	if level == -1 {
 		level = d.Level
 	}
@@ -120,8 +160,23 @@ func (d diary) Page(level int, sample int, catch bool, category string, pageMeta
 		panic("level must be a value between 0 - 6 or -1 to use default level")
 	}
 
+	if authMeta == nil {
+		authMeta = M{}
+	}
+	if pageMeta == nil {
+		pageMeta = M{}
+	}
+	if sample < 0 {
+		sample = 0
+	}
+	fluxRate := int(float64(sample) * 0.05) // add 5% flux to ensure that a different trace is sampled each time
+	if fluxRate > 0 {
+		flux = rand.Intn(fluxRate)
+	}
+
 	p := page{
 		Diary: d,
+
 		Chain: Chain{
 			Id: "abc...xyz",
 			Meta: pageMeta,
@@ -137,19 +192,16 @@ func (d diary) Page(level int, sample int, catch bool, category string, pageMeta
 		Category: category,
 	}
 
-	func() {
-		if catch {
-			// defer func() {
-			//     response = catch(category)()
-			// }()
-		}
-		// defer trace(category)()
-		scope(p)
-	}()
-	return nil
+	return pageScope(p, scope)
 }
 
-func (d diary) Load(data []byte, category string, scope func(p Page)) error {
+func (d diary) Load(data []byte, category string, scope func(p Page)) {
+	if err := d.LoadX(data, category, scope); err != nil {
+		panic(err)
+	}
+}
+
+func (d diary) LoadX(data []byte, category string, scope func(p Page)) error {
 	if len(strings.TrimSpace(category)) == 0 {
 		panic("category may not be empty")
 	}
@@ -157,17 +209,113 @@ func (d diary) Load(data []byte, category string, scope func(p Page)) error {
 		panic("scope must be defined")
 	}
 
-	p, err := parsePage(data)
+	p, err := parsePage(data, d)
 	if err != nil {
 		return err
 	}
-	func() {
-		// defer func() {
-		//     response = catch(category)()
-		// }()
-		// defer trace(category)()
-		scope(p)
-	}()
+	p.Category = fmt.Sprintf("%s.%s", p.Category, category)
+
+	return pageScope(p, scope)
+}
+
+func pageScope(p page, scope func(p Page)) (response error) {
+	if p.Catch {
+		defer func() {
+			if r := recover(); r != nil {
+				err := fmt.Errorf("%v", r)
+				if assertedErr, ok := r.(error); ok {
+					err = assertedErr
+				}
+				response = err
+
+				if p.Level > LevelError {
+					return
+				}
+
+				_, file, line, _ := runtime.Caller(2)
+				log := Log{
+					Service: p.Diary.Service,
+					Commit: p.Diary.Commit,
+					Chain: p.Chain,
+					Level: TextLevelError,
+					Category: p.Category,
+					Line: fmt.Sprintf("%s:%d", file, line),
+					Stack: string(debug.Stack()),
+					Message: "",
+					Meta: M{},
+					Time: time.Now(),
+				}
+				if p.Diary.Handler != nil {
+					p.Diary.Handler(log)
+				} else {
+					DefaultHandler(log)
+				}
+			}
+		}()
+	}
+
+	trace := true
+	if p.Level > LevelTrace {
+		trace = false
+		counter++
+		if counter > p.Sample - flux {
+			trace = true
+			counter = 0
+			fluxRate := int(float64(p.Sample) * 0.05) // add 5% flux to ensure that a different trace is sampled each time
+			if fluxRate > 0 {
+				flux = rand.Intn(fluxRate)
+			}
+		}
+	}
+
+	if trace {
+		defer func() func() {
+			_, file, line, _ := runtime.Caller(3)
+			enter := time.Now()
+			log := Log{
+				Service:  p.Diary.Service,
+				Commit:   p.Diary.Commit,
+				Chain:    p.Chain,
+				Level:    TextLevelTraceEnter,
+				Category: p.Category,
+				Line:     fmt.Sprintf("%s:%d", file, line),
+				Stack:    "",
+				Message:  "",
+				Time:     time.Now(),
+			}
+			if p.Diary.Handler != nil {
+				p.Diary.Handler(log)
+			} else {
+				DefaultHandler(log)
+			}
+			return func() {
+				exit := time.Now()
+				log := Log{
+					Service:  p.Diary.Service,
+					Commit:   p.Diary.Commit,
+					Chain:    p.Chain,
+					Level:    TextLevelTraceExit,
+					Category: p.Category,
+					Line:     fmt.Sprintf("%s:%d", file, line),
+					Stack:    "",
+					Message:  "",
+					Meta: M{
+						"enter":    enter,
+						"exit":     exit,
+						"duration": exit.Sub(enter).Milliseconds(),
+					},
+					Time: time.Now(),
+				}
+				if p.Diary.Handler != nil {
+					p.Diary.Handler(log)
+				} else {
+					DefaultHandler(log)
+				}
+			}
+		}()()
+	}
+
+	scope(p)
 
 	return nil
 }
