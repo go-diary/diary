@@ -4,8 +4,8 @@ import "strings"
 
 const (
 	LevelUnknown = -1
-	LevelDebug = 0
-	LevelTrace = 1
+	LevelTrace = 0
+	LevelDebug = 1
 	LevelInfo = 2
 	LevelNotice = 3
 	LevelWarning = 4

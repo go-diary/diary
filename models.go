@@ -49,7 +49,7 @@ type Log struct {
 	Commit Commit `json:"commit"`
 	Chain Chain `json:"chain"`
 	Level string `json:"level"`
-	Category string `json:""`
+	Category string `json:"category"`
 	Line string `json:"line"`
 	Stack string `json:"stack"`
 	Message string `json:"message"`
@@ -65,8 +65,10 @@ type diary struct {
 
 // A private struct to encapsulate page instance logic
 type page struct {
-	Id string
+	Diary diary
+	Chain Chain
 	Category string
-	Meta M
-	Auth Auth
+	Sample int
+	Level int
+	Catch bool
 }

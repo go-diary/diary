@@ -7,9 +7,9 @@
 package diary
 
 import (
-	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
 // An definition of the public functions for a diary instance
@@ -25,10 +25,10 @@ type Diary interface{
 	// - authType: The shorthand code for the type of auth account (may be empty)
 	// - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 	// - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-	Page(level string, sample int, catch bool, category string, authType, authIdentifier string, authMeta M, scope func(p Page)) error
+	Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) error
 
 	// Load a page using it JSON definition to chain multiple logs together when crossing micro-service boundaries
-	Load()
+	Load(data []byte, category string, scope func(p Page)) error
 }
 
 // Dear returns a diary.Diary interface instance for consumption
@@ -38,17 +38,24 @@ type Diary interface{
 // - service: The shorthand code used to identify which service the log belongs to
 // - serviceMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 //
-// - commitRepository: The URI of the source-code repository (may be empty)
+// - repository: The URI of the source-code repository (may be empty)
 // - commitHash: The shorthand hash of the given source commit that the service was built off of (may be empty)
 // - commitTags: The tags associated with the given source commit that the service was built off of (may be empty)
 // - commitMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
+//
 // - level: The default level to log at [NOTE: Normally NOTICE for production services]
-func Dear(client, project, service string, serviceMeta M, commitRepository, commitHash string, commitTags []string, commitMeta M, level int) Diary {
+func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int) Diary {
+	if level < LevelTrace || level > LevelFatal {
+		panic("level must be a value between 0 - 6")
+	}
+
+	// get the hostname of the server that the service is running on
 	host, err := os.Hostname()
 	if err != nil {
 		panic(err)
 	}
 
+	// get the host ips of the server that the service is running on
 	ips := make([]string, 0)
 	networkInterfaces, err := net.Interfaces()
 	if err != nil {
@@ -68,15 +75,30 @@ func Dear(client, project, service string, serviceMeta M, commitRepository, comm
 		}
 	}
 
-	fmt.Printf("host: %s\n", host)
-	fmt.Printf("ips: %v\n", ips)
-	fmt.Printf("pid: %d\n", os.Getpid())
-	fmt.Printf("ppid: %d\n", os.Getppid())
-
 	// todo: add a handler to push to agent, api, queue, systemctl, etc. (do something with log instead of just outputting it to console)
 	// todo: add flag to disable human readable output to console (in case we want to send service console output directly to systemctl logs for legacy systems)
 
-	return nil
+	return &diary{
+		Level: level,
+		Service: Service{
+			Client: client,
+			Project: project,
+			Service: service,
+			Meta: serviceMeta,
+
+			Host: host,
+			HostIps: ips,
+
+			ParentProcessId: os.Getppid(),
+			ProcessId: os.Getpid(),
+		},
+		Commit: Commit{
+			Repository: repository,
+			Hash: commitHash,
+			Tags: commitTags,
+			Meta: commitMeta,
+		},
+	}
 }
 
 // Page returns a diary.Page interface instance for consumption
@@ -90,12 +112,62 @@ func Dear(client, project, service string, serviceMeta M, commitRepository, comm
 // - authType: The shorthand code for the type of auth account (may be empty)
 // - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 // - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-func (d diary) Page(level, sample int, catch bool, category string, authType, authIdentifier string, authMeta M, scope func(p Page)) error {
-	// todo: automatically log trace
-	// todo: automatically catch and return panic as error
+func (d diary) Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) (response error) {
+	if level == -1 {
+		level = d.Level
+	}
+	if level < LevelTrace || level > LevelFatal {
+		panic("level must be a value between 0 - 6 or -1 to use default level")
+	}
+
+	p := page{
+		Diary: d,
+		Chain: Chain{
+			Id: "abc...xyz",
+			Meta: pageMeta,
+			Auth: Auth{
+				Type: authType,
+				Identifier: authIdentifier,
+				Meta: authMeta,
+			},
+		},
+		Sample: sample,
+		Level: level,
+		Catch: catch,
+		Category: category,
+	}
+
+	func() {
+		if catch {
+			// defer func() {
+			//     response = catch(category)()
+			// }()
+		}
+		// defer trace(category)()
+		scope(p)
+	}()
 	return nil
 }
 
-func (d diary) Load(data []byte, category string) (func(p Page), error) {
-	return parsePage(data)
+func (d diary) Load(data []byte, category string, scope func(p Page)) error {
+	if len(strings.TrimSpace(category)) == 0 {
+		panic("category may not be empty")
+	}
+	if scope == nil {
+		panic("scope must be defined")
+	}
+
+	p, err := parsePage(data)
+	if err != nil {
+		return err
+	}
+	func() {
+		// defer func() {
+		//     response = catch(category)()
+		// }()
+		// defer trace(category)()
+		scope(p)
+	}()
+
+	return nil
 }
