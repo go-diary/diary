@@ -1,7 +1,7 @@
 package main
 
 import (
-	"diary"
+	"github.com/go-diary/diary"
 	"sync"
 )
 
