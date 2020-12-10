@@ -105,7 +105,7 @@ func main() {
 		routine()
 	}()
 
-	instance = diary.Dear("client", "project", "service", diary.M{}, "repository", "hash", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
+	instance = diary.Dear("uprate", "go-diary", "diary", diary.M{}, "git@github.com:go-diary/diary.git", "084c59f", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
 	instance.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.Page) {
 		x := 100
 		p.Debug("x", x)
@@ -126,6 +126,9 @@ func routine() {
 	}
 }
 ```
+#### NOTES
+- Use `git config --get remote.origin.url` to get repository URL using script.
+- Use `git rev-parse --short HEAD` to get short commit has using script.
 
 ### License
 This project is licensed under the MIT license. See the [LICENSE](https://github.com/go-diary/diary/blob/main/LICENSE) file for more info.
