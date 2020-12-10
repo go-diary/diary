@@ -8,6 +8,7 @@ package diary
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -26,7 +27,7 @@ var parsePage = func(data []byte, d diary) (page, error) {
 }
 
 // An definition of the public functions for a page instance
-type Page interface{
+type IPage interface{
 	Debug(key string, value interface{})
 	Info(category string, meta M)
 	Notice(category string, meta M)
@@ -205,8 +206,8 @@ func (p page) Fatal(category, message string, code int, meta M) {
 	os.Exit(code)
 }
 
-func (p page) Scope(category string, scope func(p Page)) error {
-	return nil
+func (p page) Scope(category string, scope func(p IPage)) error {
+	return errors.New("not implemented yet")
 }
 
 func (p page) ToJSON() []byte {

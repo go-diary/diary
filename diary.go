@@ -21,7 +21,7 @@ var counter int = 0
 var flux int = 0
 
 // An definition of the public functions for a diary instance
-type Diary interface{
+type IDiary interface{
 	// Page returns a diary.Page interface instance for consumption
 	// In a page scope all logs will be linked to the same page identifier
 	// This allows us to trace the entire page chain easily for troubleshooting and profiling
@@ -33,7 +33,7 @@ type Diary interface{
 	// - authType: The shorthand code for the type of auth account (may be empty)
 	// - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 	// - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-	Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page))
+	Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p IPage))
 
 	// Page returns a diary.Page interface instance for consumption
 	// In a page scope all logs will be linked to the same page identifier
@@ -46,13 +46,13 @@ type Diary interface{
 	// - authType: The shorthand code for the type of auth account (may be empty)
 	// - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 	// - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-	PageX(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) error
+	PageX(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p IPage)) error
 
 	// Load a page using the JSON definition to chain multiple logs together when crossing micro-service boundaries
-	Load(data []byte, category string, scope func(p Page))
+	Load(data []byte, category string, scope func(p IPage))
 
 	// Load a page using the JSON definition to chain multiple logs together when crossing micro-service boundaries
-	LoadX(data []byte, category string, scope func(p Page)) error
+	LoadX(data []byte, category string, scope func(p IPage)) error
 }
 
 // Dear returns a diary.Diary interface instance for consumption
@@ -69,7 +69,7 @@ type Diary interface{
 //
 // - level: The default level to log at [NOTE: Normally NOTICE for production services]
 // - handler: A routine to handle log entries  [NOTE: ]
-func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int, handler func(log Log)) Diary {
+func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int, handler func(log Log)) IDiary {
 	if level < LevelTrace || level > LevelFatal {
 		panic("level must be a value between 0 - 6")
 	}
@@ -135,7 +135,7 @@ func Dear(client, project, service string, serviceMeta M, repository, commitHash
 // - authType: The shorthand code for the type of auth account (may be empty)
 // - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 // - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-func (d diary) Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) {
+func (d diary) Page(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p IPage)) {
 	if err := d.PageX(level, sample, catch, category, pageMeta, authType, authIdentifier, authMeta, scope); err != nil && !catch {
 		panic(err)
 	}
@@ -152,7 +152,7 @@ func (d diary) Page(level int, sample int, catch bool, category string, pageMeta
 // - authType: The shorthand code for the type of auth account (may be empty)
 // - authIdentifier: The identifier, which can be anything, used to identify the given auth account (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
 // - authMeta: Can contain any other additional data that you may require on logs for troubleshooting (may be empty) [WARNING: Don't ever log personal data without first encrypting or salt-hashing the data.]
-func (d diary) PageX(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p Page)) (response error) {
+func (d diary) PageX(level int, sample int, catch bool, category string, pageMeta M, authType, authIdentifier string, authMeta M, scope func(p IPage)) (response error) {
 	if level == -1 {
 		level = d.Level
 	}
@@ -195,13 +195,13 @@ func (d diary) PageX(level int, sample int, catch bool, category string, pageMet
 	return pageScope(p, scope)
 }
 
-func (d diary) Load(data []byte, category string, scope func(p Page)) {
+func (d diary) Load(data []byte, category string, scope func(p IPage)) {
 	if err := d.LoadX(data, category, scope); err != nil {
 		panic(err)
 	}
 }
 
-func (d diary) LoadX(data []byte, category string, scope func(p Page)) error {
+func (d diary) LoadX(data []byte, category string, scope func(p IPage)) error {
 	if len(strings.TrimSpace(category)) == 0 {
 		panic("category may not be empty")
 	}
@@ -218,7 +218,7 @@ func (d diary) LoadX(data []byte, category string, scope func(p Page)) error {
 	return pageScope(p, scope)
 }
 
-func pageScope(p page, scope func(p Page)) (response error) {
+func pageScope(p page, scope func(p IPage)) (response error) {
 	if p.Catch {
 		defer func() {
 			if r := recover(); r != nil {
