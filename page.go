@@ -34,7 +34,7 @@ type IPage interface{
 	Warning(category, message string, meta M)
 	Error(category, message string, meta M)
 	Fatal(category, message string, code int, meta M)
-	ToJSON() []byte
+	ToJson() []byte
 }
 
 // normally only used for troubleshooting
@@ -210,7 +210,7 @@ func (p page) Scope(category string, scope func(p IPage)) error {
 	return errors.New("not implemented yet")
 }
 
-func (p page) ToJSON() []byte {
+func (p page) ToJson() []byte {
 	data, err := json.Marshal(struct {
 		Service Service `json:"service"`
 		Commit Commit `json:"commit"`

@@ -76,7 +76,7 @@ import (
 )
 
 func main() {
-    instance := diary.Dear("client", "project", "service", diary.M{}, "repository", "hash", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
+	instance := diary.Dear("uprate", "go-diary", "diary", diary.M{}, "git@github.com:go-diary/diary.git", "084c59f", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
     instance.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.Page) {
         x := 100
         p.Debug("x", x)
@@ -89,12 +89,12 @@ func main() {
 package main
 
 import (
-	"diary"
+	"github.com/go-diary/diary"
 	"sync"
 )
 
 var channel = make(chan []byte)
-var instance diary.Diary
+var instance diary.IDiary
 
 func main() {
 	group := sync.WaitGroup{}
@@ -106,10 +106,10 @@ func main() {
 	}()
 
 	instance = diary.Dear("uprate", "go-diary", "diary", diary.M{}, "git@github.com:go-diary/diary.git", "084c59f", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
-	instance.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.Page) {
+	instance.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.IPage) {
 		x := 100
 		p.Debug("x", x)
-		channel <- p.ToJSON()
+		channel <- p.ToJson()
 	})
 
 	group.Wait()
@@ -117,12 +117,12 @@ func main() {
 
 func routine() {
 	select {
-		case data := <-channel:
-			instance.Load(data, "routine", func(p diary.Page) {
-				y := 200
-				p.Debug("y", y)
-			})
-			break
+	case data := <-channel:
+		instance.Load(data, "routine", func(p diary.IPage) {
+			y := 200
+			p.Debug("y", y)
+		})
+		break
 	}
 }
 ```

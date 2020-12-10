@@ -8,7 +8,7 @@ import (
 var d diary.IDiary
 
 func init() {
-	d = diary.Dear("client", "project", "service", diary.M{"type":"service"}, "repository", "hash", []string{}, diary.M{"type":"commit"}, diary.LevelTrace, diary.HumanReadableHandler)
+	d = diary.Dear("uprate", "go-diary", "diary", diary.M{}, "git@github.com:go-diary/diary.git", "084c59f", []string{}, diary.M{}, diary.LevelTrace, diary.HumanReadableHandler)
 }
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 
 	d.Page(-1, 1000, true, "main", diary.M{}, "", "", nil, func(p diary.IPage) {
 		p.Debug("x", true)
-		channel <- p.ToJSON()
+		channel <- p.ToJson()
 		panic("test")
 	})
 
