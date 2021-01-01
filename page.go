@@ -41,13 +41,18 @@ func (p page) Debug(key string, value interface{}) {
 		return
 	}
 
+	cat := key
+	if p.Category != "" {
+		cat = fmt.Sprintf("%s.%s", p.Category, key)
+	}
+
 	_, file, line, _ := runtime.Caller(1)
 	log := Log{
 		Service: p.Diary.Service,
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
 		Level: TextLevelDebug,
-		Category: fmt.Sprintf("%s.%s", p.Category, key),
+		Category: cat,
 		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: "",
@@ -69,6 +74,11 @@ func (p page) Info(category string, meta M) {
 		return
 	}
 
+	cat := category
+	if p.Category != "" {
+		cat = fmt.Sprintf("%s.%s", p.Category, category)
+	}
+
 	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
@@ -78,7 +88,7 @@ func (p page) Info(category string, meta M) {
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
 		Level: TextLevelInfo,
-		Category: fmt.Sprintf("%s.%s", p.Category, category),
+		Category: cat,
 		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: "",
@@ -98,6 +108,11 @@ func (p page) Notice(category string, meta M) {
 		return
 	}
 
+	cat := category
+	if p.Category != "" {
+		cat = fmt.Sprintf("%s.%s", p.Category, category)
+	}
+
 	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
@@ -107,7 +122,7 @@ func (p page) Notice(category string, meta M) {
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
 		Level: TextLevelNotice,
-		Category: fmt.Sprintf("%s.%s", p.Category, category),
+		Category: cat,
 		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: "",
@@ -127,6 +142,11 @@ func (p page) Warning(category, message string, meta M) {
 		return
 	}
 
+	cat := category
+	if p.Category != "" {
+		cat = fmt.Sprintf("%s.%s", p.Category, category)
+	}
+
 	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
@@ -136,7 +156,7 @@ func (p page) Warning(category, message string, meta M) {
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
 		Level: TextLevelWarning,
-		Category: fmt.Sprintf("%s.%s", p.Category, category),
+		Category: cat,
 		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: "",
 		Message: message,
@@ -155,6 +175,11 @@ func (p page) Error(category, message string, meta M) {
 		return
 	}
 
+	cat := category
+	if p.Category != "" {
+		cat = fmt.Sprintf("%s.%s", p.Category, category)
+	}
+
 	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
@@ -164,7 +189,7 @@ func (p page) Error(category, message string, meta M) {
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
 		Level: TextLevelError,
-		Category: fmt.Sprintf("%s.%s", p.Category, category),
+		Category: cat,
 		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: string(debug.Stack()),
 		Message: message,
@@ -180,6 +205,11 @@ func (p page) Error(category, message string, meta M) {
 
 // application will be force to exit
 func (p page) Fatal(category, message string, code int, meta M) {
+	cat := category
+	if p.Category != "" {
+		cat = fmt.Sprintf("%s.%s", p.Category, category)
+	}
+
 	_, file, line, _ := runtime.Caller(1)
 	if meta == nil {
 		meta = M{}
@@ -189,7 +219,7 @@ func (p page) Fatal(category, message string, code int, meta M) {
 		Commit: p.Diary.Commit,
 		Chain: p.Chain,
 		Level: TextLevelFatal,
-		Category: fmt.Sprintf("%s.%s", p.Category, category),
+		Category: cat,
 		Line: fmt.Sprintf("%s:%d", file, line),
 		Stack: string(debug.Stack()),
 		Message: message,

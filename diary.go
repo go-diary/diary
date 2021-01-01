@@ -195,6 +195,11 @@ func (d diary) LoadX(data []byte, category string, scope S) error {
 }
 
 func pageScope(p page, scope S) (response error) {
+	cat := p.Category
+	if cat == "" {
+		cat = p.Diary.Service.Service
+	}
+
 	if p.Catch {
 		defer func() {
 			if r := recover(); r != nil {
@@ -214,7 +219,7 @@ func pageScope(p page, scope S) (response error) {
 					Commit: p.Diary.Commit,
 					Chain: p.Chain,
 					Level: TextLevelError,
-					Category: p.Category,
+					Category: cat,
 					Line: fmt.Sprintf("%s:%d", file, line),
 					Stack: string(debug.Stack()),
 					Message: fmt.Sprint(response),
@@ -253,7 +258,7 @@ func pageScope(p page, scope S) (response error) {
 				Commit:   p.Diary.Commit,
 				Chain:    p.Chain,
 				Level:    TextLevelTraceEnter,
-				Category: p.Category,
+				Category: cat,
 				Line:     fmt.Sprintf("%s:%d", file, line),
 				Stack:    "",
 				Message:  "",
@@ -271,7 +276,7 @@ func pageScope(p page, scope S) (response error) {
 					Commit:   p.Diary.Commit,
 					Chain:    p.Chain,
 					Level:    TextLevelTraceExit,
-					Category: p.Category,
+					Category: cat,
 					Line:     fmt.Sprintf("%s:%d", file, line),
 					Stack:    "",
 					Message:  "",
