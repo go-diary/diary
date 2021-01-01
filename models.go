@@ -14,6 +14,7 @@ type M map[string]interface{}
 // A package shorthand for a handler function
 type H func(log Log)
 
+// A package shorthand for a page scope function
 type S func(p IPage)
 
 // A public struct to encapsulate the service details for a log entry
