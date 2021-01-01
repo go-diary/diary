@@ -190,7 +190,7 @@ func (d diary) PageX(level int, sample int, catch bool, category string, pageMet
 		Sample: sample,
 		Level: level,
 		Catch: catch,
-		Category: category,
+		Category: strings.TrimPrefix(strings.TrimPrefix(category, d.Service.Service), "."),
 	}
 
 	return pageScope(p, scope)
