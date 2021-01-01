@@ -241,7 +241,7 @@ func pageScope(p page, scope func(p IPage)) (response error) {
 					Category: p.Category,
 					Line: fmt.Sprintf("%s:%d", file, line),
 					Stack: string(debug.Stack()),
-					Message: "",
+					Message: fmt.Sprint(response),
 					Meta: M{},
 					Time: time.Now(),
 				}
