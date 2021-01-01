@@ -12,6 +12,17 @@ const (
 	LevelFatal = 6
 )
 
+var Levels = []int{
+	LevelTrace,
+	LevelDebug,
+	LevelInfo,
+	LevelNotice,
+	LevelWarning,
+	LevelWarning,
+	LevelError,
+	LevelFatal,
+}
+
 const (
 	TextLevelTrace = "trace"
 	TextLevelTraceEnter = "enter"
@@ -23,6 +34,17 @@ const (
 	TextLevelError = "error"
 	TextLevelFatal = "fatal"
 )
+
+var TextLevels = []string{
+	TextLevelTrace,
+	TextLevelDebug,
+	TextLevelInfo,
+	TextLevelNotice,
+	TextLevelWarning,
+	TextLevelWarning,
+	TextLevelError,
+	TextLevelFatal,
+}
 
 func ConvertFromTextLevel(value string) int {
 	switch strings.ToLower(value) {
