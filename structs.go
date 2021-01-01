@@ -8,15 +8,6 @@ package diary
 
 import "time"
 
-// A package shorthand for a map[string]interface
-type M map[string]interface{}
-
-// A package shorthand for a handler function
-type H func(log Log)
-
-// A package shorthand for a page scope function
-type S func(p IPage)
-
 // A public struct to encapsulate the service details for a log entry
 type Service struct {
 	Client string `json:"client"`
@@ -63,22 +54,4 @@ type Log struct {
 	Message string `json:"message"`
 	Meta M `json:"meta"`
 	Time time.Time `json:"time"`
-}
-
-// A private struct to encapsulate diary instance logic
-type diary struct {
-	Level int
-	Handler H
-	Service Service
-	Commit Commit
-}
-
-// A private struct to encapsulate page instance logic
-type page struct {
-	Diary diary
-	Chain Chain
-	Category string
-	Sample int
-	Level int
-	Catch bool
 }

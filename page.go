@@ -25,16 +25,14 @@ var parsePage = func(data []byte, d diary) (page, error) {
 	return p, nil
 }
 
-// An definition of the public functions for a page instance
-type IPage interface{
-	Debug(key string, value interface{})
-	Info(category string, meta M)
-	Notice(category string, meta M)
-	Warning(category, message string, meta M)
-	Error(category, message string, meta M)
-	Fatal(category, message string, code int, meta M)
-	ToJson() []byte
-	Scope(category string, scope S) error
+// A private struct to encapsulate page instance logic
+type page struct {
+	Diary diary
+	Chain Chain
+	Category string
+	Sample int
+	Level int
+	Catch bool
 }
 
 // normally only used for troubleshooting
