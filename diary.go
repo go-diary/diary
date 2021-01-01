@@ -214,7 +214,9 @@ func (d diary) LoadX(data []byte, category string, scope func(p IPage)) error {
 	if err != nil {
 		return err
 	}
-	p.Category = fmt.Sprintf("%s.%s", p.Category, category)
+	if !strings.HasSuffix(p.Category, category) {
+		p.Category = fmt.Sprintf("%s.%s", p.Category, category)
+	}
 
 	return pageScope(p, scope)
 }
