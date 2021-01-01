@@ -11,6 +11,9 @@ import "time"
 // A package shorthand for a map[string]interface
 type M map[string]interface{}
 
+// A package shorthand for a handler function
+type H func(log Log)
+
 // A public struct to encapsulate the service details for a log entry
 type Service struct {
 	Client string `json:"client"`
@@ -62,7 +65,7 @@ type Log struct {
 // A private struct to encapsulate diary instance logic
 type diary struct {
 	Level int
-	Handler func(log Log)
+	Handler H
 	Service Service
 	Commit Commit
 }

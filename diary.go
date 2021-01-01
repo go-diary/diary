@@ -70,7 +70,7 @@ type IDiary interface{
 //
 // - level: The default level to log at [NOTE: Normally NOTICE for production services]
 // - handler: A routine to handle log entries  [NOTE: ]
-func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int, handler func(log Log)) IDiary {
+func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int, handler H) IDiary {
 	if level < LevelTrace || level > LevelFatal {
 		panic("level must be a value between 0 - 6")
 	}
