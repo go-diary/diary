@@ -8,7 +8,6 @@ package diary
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -35,6 +34,7 @@ type IPage interface{
 	Error(category, message string, meta M)
 	Fatal(category, message string, code int, meta M)
 	ToJson() []byte
+	Scope(category string, scope S) error
 }
 
 // normally only used for troubleshooting
@@ -206,8 +206,8 @@ func (p page) Fatal(category, message string, code int, meta M) {
 	os.Exit(code)
 }
 
-func (p page) Scope(category string, scope func(p IPage)) error {
-	return errors.New("not implemented yet")
+func (p page) Scope(category string, scope S) error {
+	return p.Diary.LoadX(p.ToJson(), category, scope)
 }
 
 func (p page) ToJson() []byte {

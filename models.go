@@ -14,6 +14,8 @@ type M map[string]interface{}
 // A package shorthand for a handler function
 type H func(log Log)
 
+type S func(p IPage)
+
 // A public struct to encapsulate the service details for a log entry
 type Service struct {
 	Client string `json:"client"`
