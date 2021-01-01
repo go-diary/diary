@@ -8,6 +8,7 @@ package diary
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"math/rand"
 	"net"
 	"os"
@@ -178,7 +179,7 @@ func (d diary) PageX(level int, sample int, catch bool, category string, pageMet
 		Diary: d,
 
 		Chain: Chain{
-			Id: "abc...xyz",
+			Id: primitive.NewObjectID().Hex(),
 			Meta: pageMeta,
 			Auth: Auth{
 				Type: authType,
