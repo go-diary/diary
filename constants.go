@@ -69,11 +69,17 @@ func ConvertFromTextLevel(value string) int {
 func IsValidLevel(value int) bool {
 	switch value {
 	case LevelTrace:
+		return true
 	case LevelDebug:
+		return true
 	case LevelInfo:
+		return true
 	case LevelNotice:
+		return true
 	case LevelWarning:
+		return true
 	case LevelError:
+		return true
 	case LevelFatal:
 		return true
 	}
