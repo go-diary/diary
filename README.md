@@ -1,7 +1,5 @@
 # Diary
 
-**Note:** This project is still in development, has not even started pre-alpha yet.
-
 ## Logging Checklist [ [pdf](https://github.com/go-diary/diary/raw/main/Logging%20Checklist.pdf) ]
 ### 10 Commandments of Logging “Masterzen”
 
