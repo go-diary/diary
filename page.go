@@ -35,6 +35,11 @@ type page struct {
 	Catch bool
 }
 
+// return parent diary
+func (p page) Parent() IDiary {
+	return p.Diary
+}
+
 // normally only used for troubleshooting
 func (p page) Debug(key string, value interface{}) {
 	if p.Level > LevelDebug {

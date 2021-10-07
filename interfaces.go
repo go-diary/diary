@@ -37,6 +37,7 @@ type IDiary interface{
 
 // An definition of the public functions for a page instance
 type IPage interface{
+	Parent() IDiary
 	Debug(key string, value interface{})
 	Info(category string, meta M)
 	Notice(category string, meta M)
