@@ -3,13 +3,14 @@ package diary
 import "strings"
 
 const (
-	LevelTrace = 0
-	LevelDebug = 1
-	LevelInfo = 2
-	LevelNotice = 3
+	LevelTrace   = 0
+	LevelDebug   = 1
+	LevelInfo    = 2
+	LevelNotice  = 3
 	LevelWarning = 4
-	LevelError = 5
-	LevelFatal = 6
+	LevelError   = 5
+	LevelFatal   = 6
+	LevelAudit   = 7
 )
 
 var Levels = []int{
@@ -21,18 +22,20 @@ var Levels = []int{
 	LevelWarning,
 	LevelError,
 	LevelFatal,
+	LevelAudit,
 }
 
 const (
-	TextLevelTrace = "trace"
+	TextLevelTrace      = "trace"
 	TextLevelTraceEnter = "enter"
-	TextLevelTraceExit = "exit"
-	TextLevelDebug = "debug"
-	TextLevelInfo = "info"
-	TextLevelNotice = "notice"
-	TextLevelWarning = "warning"
-	TextLevelError = "error"
-	TextLevelFatal = "fatal"
+	TextLevelTraceExit  = "exit"
+	TextLevelDebug      = "debug"
+	TextLevelInfo       = "info"
+	TextLevelNotice     = "notice"
+	TextLevelWarning    = "warning"
+	TextLevelError      = "error"
+	TextLevelFatal      = "fatal"
+	TextLevelAudit      = "audit"
 )
 
 var TextLevels = []string{
@@ -44,6 +47,7 @@ var TextLevels = []string{
 	TextLevelWarning,
 	TextLevelError,
 	TextLevelFatal,
+	TextLevelAudit,
 }
 
 func ConvertFromTextLevel(value string) int {
@@ -62,6 +66,8 @@ func ConvertFromTextLevel(value string) int {
 		return LevelError
 	case TextLevelFatal:
 		return LevelFatal
+	case TextLevelAudit:
+		return LevelAudit
 	}
 	return -1
 }
@@ -81,6 +87,8 @@ func IsValidLevel(value int) bool {
 	case LevelError:
 		return true
 	case LevelFatal:
+		return true
+	case LevelAudit:
 		return true
 	}
 	return false

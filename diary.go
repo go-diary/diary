@@ -36,8 +36,8 @@ var flux int = 0
 // - level: The default level to log at [NOTE: Normally NOTICE for production services]
 // - handler: A routine to handle log entries  [NOTE: ]
 func Dear(client, project, service string, serviceMeta M, repository, commitHash string, commitTags []string, commitMeta M, level int, handler H) IDiary {
-	if level < LevelTrace || level > LevelFatal {
-		panic("level must be a value between 0 - 6")
+	if level < LevelTrace || level > LevelAudit {
+		panic("level must be a value between 0 - 7")
 	}
 
 	// get the hostname of the server that the service is running on
@@ -67,35 +67,35 @@ func Dear(client, project, service string, serviceMeta M, repository, commitHash
 	}
 
 	return &diary{
-		Level: level,
+		Level:   level,
 		Handler: handler,
 		Service: Service{
-			Client: client,
+			Client:  client,
 			Project: project,
 			Service: service,
-			Meta: serviceMeta,
+			Meta:    serviceMeta,
 
-			Host: host,
+			Host:    host,
 			HostIps: ips,
 
 			ParentProcessId: os.Getppid(),
-			ProcessId: os.Getpid(),
+			ProcessId:       os.Getpid(),
 		},
 		Commit: Commit{
 			Repository: repository,
-			Hash: commitHash,
-			Tags: commitTags,
-			Meta: commitMeta,
+			Hash:       commitHash,
+			Tags:       commitTags,
+			Meta:       commitMeta,
 		},
 	}
 }
 
 // A private struct to encapsulate diary instance logic
 type diary struct {
-	Level int
+	Level   int
 	Handler H
 	Service Service
-	Commit Commit
+	Commit  Commit
 }
 
 // Page issues a diary.Page interface instance for consumption
@@ -130,8 +130,8 @@ func (d diary) PageX(level int, sample int, catch bool, category string, pageMet
 	if level == -1 {
 		level = d.Level
 	}
-	if level < LevelTrace || level > LevelFatal {
-		panic("level must be a value between 0 - 6 or -1 to use default level")
+	if level < LevelTrace || level > LevelAudit {
+		panic("level must be a value between 0 - 7 or -1 to use default level")
 	}
 
 	if authMeta == nil {
@@ -152,17 +152,17 @@ func (d diary) PageX(level int, sample int, catch bool, category string, pageMet
 		Diary: d,
 
 		Chain: Chain{
-			Id: primitive.NewObjectID().Hex(),
+			Id:   primitive.NewObjectID().Hex(),
 			Meta: pageMeta,
 			Auth: Auth{
-				Type: authType,
+				Type:       authType,
 				Identifier: authIdentifier,
-				Meta: authMeta,
+				Meta:       authMeta,
 			},
 		},
-		Sample: sample,
-		Level: level,
-		Catch: catch,
+		Sample:   sample,
+		Level:    level,
+		Catch:    catch,
 		Category: strings.TrimPrefix(strings.TrimPrefix(category, d.Service.Service), "."),
 	}
 
@@ -219,16 +219,16 @@ func pageScope(p page, scope S) (response error) {
 
 				_, file, line, _ := runtime.Caller(2)
 				log := Log{
-					Service: p.Diary.Service,
-					Commit: p.Diary.Commit,
-					Chain: p.Chain,
-					Level: TextLevelError,
+					Service:  p.Diary.Service,
+					Commit:   p.Diary.Commit,
+					Chain:    p.Chain,
+					Level:    TextLevelError,
 					Category: cat,
-					Line: fmt.Sprintf("%s:%d", file, line),
-					Stack: string(debug.Stack()),
-					Message: fmt.Sprint(response),
-					Meta: M{},
-					Time: time.Now(),
+					Line:     fmt.Sprintf("%s:%d", file, line),
+					Stack:    string(debug.Stack()),
+					Message:  fmt.Sprint(response),
+					Meta:     M{},
+					Time:     time.Now(),
 				}
 				if p.Diary.Handler != nil {
 					p.Diary.Handler(log)
@@ -243,7 +243,7 @@ func pageScope(p page, scope S) (response error) {
 	if p.Level > LevelTrace {
 		trace = false
 		counter++
-		if counter > p.Sample - flux {
+		if counter > p.Sample-flux {
 			trace = true
 			counter = 0
 			fluxRate := int(float64(p.Sample) * 0.05) // add 5% flux to ensure that a different trace is sampled each time

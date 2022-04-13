@@ -1,7 +1,7 @@
 package diary
 
 // An definition of the public functions for a diary instance
-type IDiary interface{
+type IDiary interface {
 	// Page returns a diary.Page interface instance for consumption
 	// In a page scope all logs will be linked to the same page identifier
 	// This allows us to trace the entire page chain easily for troubleshooting and profiling
@@ -36,7 +36,7 @@ type IDiary interface{
 }
 
 // An definition of the public functions for a page instance
-type IPage interface{
+type IPage interface {
 	Parent() IDiary
 	Debug(key string, value interface{})
 	Info(category string, meta M)
@@ -44,6 +44,7 @@ type IPage interface{
 	Warning(category, message string, meta M)
 	Error(category, message string, meta M)
 	Fatal(category, message string, code int, meta M)
+	Audit(category string, meta M)
 	ToJson() []byte
 	Scope(category string, scope S) error
 }
