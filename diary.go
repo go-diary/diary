@@ -275,6 +275,21 @@ func pageScope(p page, scope S) (response error) {
 			}
 			return func() {
 				exit := time.Now()
+				var minutes = exit.Sub(enter).Minutes()
+				var seconds = exit.Sub(enter).Seconds()
+				var milliSeconds = exit.Sub(enter).Milliseconds()
+				var microSeconds = exit.Sub(enter).Microseconds()
+				if milliSeconds < 1 {
+					milliSeconds = 0
+					seconds = 0
+					minutes = 0
+				} else if seconds < 1 {
+					seconds = 0
+					minutes = 0
+				} else if minutes < 1 {
+					minutes = 0
+				}
+
 				log := Log{
 					Service:  p.Diary.Service,
 					Commit:   p.Diary.Commit,
@@ -287,7 +302,10 @@ func pageScope(p page, scope S) (response error) {
 					Meta: M{
 						"enter":    enter,
 						"exit":     exit,
-						"duration": exit.Sub(enter).Milliseconds(),
+						"durationMinutes": minutes,
+						"durationSeconds": seconds,
+						"durationMilliSeconds": milliSeconds,
+						"durationMicroSeconds": microSeconds,
 					},
 					Time: time.Now(),
 				}
